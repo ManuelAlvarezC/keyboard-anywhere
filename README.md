@@ -1,12 +1,11 @@
 # Keyboard Anywhere
 
 
-This is a fork from the original Keyboard Anywhere. The installation process is a modified version from this one [Instructables](https://www.instructables.com/Invisible-Piano/). The original script used 
-
+This is a fork from the original [Keyboard Anywhere](https://github.com/petermoz/keyboard-anywhere). The installation process is a modified version from this one [Instructables](https://www.instructables.com/Invisible-Piano/).
 
 ## Install
 
-This is a summary of the process executed on 2021/03 using `Ubuntu 20.04 LTS`  and `Python 3.9`. We recomend imitate the same environment using `virtualbox` and a `virtualenv`.
+This is a summary of the process executed on 2021/03 using `Ubuntu 20.04 LTS`  and `Python 3.9`. We recomend imitate the same environment using `Virtualbox` and a `virtualenv`.
 
 
 The original installation is done with some dependencies that are not longer available, this is a summary of all the work trying to reproduce it in the forementioned environment.

@@ -38,17 +38,21 @@ install-test: clean-build clean-pyc ## install the package and test dependencies
 	pip install .[test]
 
 .PHONY: test
-test: ## run tests
-	python manage.py test
+test: ## run tests quickly with the default Python
+	python -m pytest --basetemp=${ENVTMPDIR} --cov=keyboard_anywhere --cov-report xml
 
 .PHONY: lint
 lint: ## check style with flake8 and isort
-	flake8 keyboard_anywhere
-	isort -c --recursive keyboard_anywhere
+	flake8 keyboard_anywhere tests
+	isort -c --recursive keyboard_anywhere tests
 
 .PHONY: install-develop
 install-develop: clean-build clean-pyc ## install the package in editable mode and dependencies for development
 	pip install -e .[dev]
+
+.PHONY: test-all
+test-all: ## run tests on every Python version with tox
+	tox -r -p auto
 
 .PHONY: fix-lint
 fix-lint: ## fix lint issues using autoflake, autopep8, and isort
@@ -56,8 +60,98 @@ fix-lint: ## fix lint issues using autoflake, autopep8, and isort
 	autopep8 --in-place --recursive --aggressive keyboard_anywhere tests
 	isort --apply --atomic --recursive keyboard_anywhere tests
 
+.PHONY: coverage
+coverage: ## check code coverage quickly with the default Python
+	coverage run --source keyboard_anywhere -m pytest
+	coverage report -m
+	coverage html
+	$(BROWSER) htmlcov/index.html
+
+.PHONY: docs
+docs: clean-docs ## generate Sphinx HTML documentation, including API docs
+	sphinx-apidoc --separate --no-toc -o docs/api/ keyboard_anywhere
+	$(MAKE) -C docs html
+
+.PHONY: view-docs
+view-docs: docs ## view docs in browser
+	$(BROWSER) docs/_build/html/index.html
+
+.PHONY: serve-docs
+serve-docs: view-docs ## compile the docs watching for changes
+	watchmedo shell-command -W -R -D -p '*.rst;*.md' -c '$(MAKE) -C docs html' .
+
+.PHONY: dist
+dist: clean ## builds source and wheel package
+	python setup.py sdist
+	python setup.py bdist_wheel
+	ls -l dist
+
+.PHONY: test-publish
+test-publish: dist ## package and upload a release on TestPyPI
+	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+.PHONY: publish
+publish: dist ## package and upload a release
+	twine upload dist/*
+
+.PHONY: bumpversion-release
+bumpversion-release: ## Merge master to stable and bumpversion release
+	git checkout stable
+	git merge --no-ff master -m"make release-tag: Merge branch 'master' into stable"
+	bumpversion release
+	git push --tags origin stable
+
+.PHONY: bumpversion-patch
+bumpversion-patch: ## Merge stable to master and bumpversion patch
+	git checkout master
+	git merge stable
+	bumpversion --no-tag patch
+	git push
+
+.PHONY: bumpversion-minor
+bumpversion-minor: ## Bump the version the next minor skipping the release
+	bumpversion --no-tag minor
+
+.PHONY: bumpversion-major
+bumpversion-major: ## Bump the version the next major skipping the release
+	bumpversion --no-tag major
+
+.PHONY: bumpversion-candidate
+bumpversion-candidate: ## Bump the version to the next candidate
+	bumpversion candidate --no-tag
+
+CURRENT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
+CHANGELOG_LINES := $(shell git diff HEAD..origin/stable HISTORY.md 2>&1 | wc -l)
+
+.PHONY: check-master
+check-master: ## Check if we are in master branch
+ifneq ($(CURRENT_BRANCH),master)
+	$(error Please make the release from master branch\n)
+endif
+
+.PHONY: check-history
+check-history: ## Check if HISTORY.md has been modified
+ifeq ($(CHANGELOG_LINES),0)
+	$(error Please insert the release notes in HISTORY.md before releasing)
+endif
+
+.PHONY: check-release
+check-release: check-master check-history ## Check if the release can be made
+
+.PHONY: release
+release: check-release bumpversion-release publish bumpversion-patch
+
+.PHONY: release-candidate
+release-candidate: check-master publish bumpversion-candidate
+
+.PHONY: release-minor
+release-minor: check-release bumpversion-minor release
+
+.PHONY: release-major
+release-major: check-release bumpversion-major release
+
 .PHONY: clean
-clean: clean-build clean-pyc clean-test ## remove all build, test, docs and Python artifacts
+clean: clean-build clean-pyc clean-test clean-coverage clean-docs ## remove all build, test, coverage, docs and Python artifacts
 
 .PHONY: clean-build
 clean-build: ## remove build artifacts
@@ -74,7 +168,18 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
+.PHONY: clean-coverage
+clean-coverage: ## remove coverage artifacts
+	rm -f .coverage
+	rm -f .coverage.*
+	rm -fr htmlcov/
+
 .PHONY: clean-test
 clean-test: ## remove test artifacts
 	rm -fr .tox/
 	rm -fr .pytest_cache
+
+.PHONY: clean-docs
+clean-docs: ## remove previously built docs
+	rm -f docs/api/*.rst
+	-$(MAKE) -C docs clean 2>/dev/null  # this fails if sphinx is not yet installed
