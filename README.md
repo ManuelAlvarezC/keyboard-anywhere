@@ -9,7 +9,7 @@ This is a fork from the original Keyboard Anywhere. The installation process is 
 This is a summary of the process executed on 2021/03 using `Ubuntu 20.04 LTS`  and `Python 3.9`. We recomend imitate the same environment using `virtualbox` and a `virtualenv`.
 
 
-The original installation is done with some dependencies that are not longer available, this is a 
+The original installation is done with some dependencies that are not longer available, this is a summary of all the work trying to reproduce it in the forementioned environment.
 
 ### System wide requirements
 
@@ -44,9 +44,9 @@ sudo freenect-glview
 ```bash
 sudo apt-get install cython python-dev python-numpy
 cd libfreenect/wrappers/python
+```
 
 
-``` 
 ### Python requirements
 
 
