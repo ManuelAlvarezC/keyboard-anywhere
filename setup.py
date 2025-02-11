@@ -12,6 +12,7 @@ with open('HISTORY.md', encoding='utf-8') as history_file:
     history = history_file.read()
 
 install_requires = [
+    "numpy",
 ]
 
 setup_requires = [
@@ -55,18 +56,7 @@ development_requires = [
 setup(
     author='Manuel Alvarez',
     author_email='manuel@pythiac.com',
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-    ],
-    description='Augmented reality Piano using Kinnect camera',
+        description='Augmented reality Piano using Kinnect camera',
     extras_require={
         'test': tests_require,
         'dev': development_requires + tests_require,
@@ -80,7 +70,7 @@ setup(
     keywords='keyboard_anywhere keyboard_anywhere keyboard_anywhere',
     name='keyboard_anywhere',
     packages=find_packages(include=['keyboard_anywhere', 'keyboard_anywhere.*']),
-    python_requires='>=3.5',
+    python_requires='>=3.4',
     setup_requires=setup_requires,
     test_suite='tests',
     tests_require=tests_require,
